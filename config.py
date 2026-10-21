@@ -3,6 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import os
+import math
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -163,9 +164,12 @@ def parse_non_negative_int(raw_value: str, name: str) -> int:
 
 def parse_float(raw_value: str, name: str) -> float:
     try:
-        return float(raw_value.strip())
+        value = float(raw_value.strip())
     except ValueError as exc:
         raise RuntimeError(f"{name} must be a number.") from exc
+    if not math.isfinite(value):
+        raise RuntimeError(f"{name} must be a finite number.")
+    return value
 
 
 def parse_positive_float(raw_value: str, name: str) -> float:

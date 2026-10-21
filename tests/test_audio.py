@@ -1,6 +1,7 @@
 import asyncio
 import shutil
 import wave
+import sys
 
 import pytest
 
@@ -38,3 +39,30 @@ def test_real_ffmpeg_conversion_and_silence_vad(tmp_path):
     vad = audio_utils.detect_speech_in_wav(target)
     assert vad.available
     assert vad.detected_speech_seconds == 0
+
+
+@pytest.mark.parametrize('cancel', [False, True])
+def test_subprocess_terminated_on_timeout_or_cancellation(monkeypatch, cancel):
+    original = asyncio.create_subprocess_exec
+    processes = []
+    async def run():
+        started = asyncio.Event()
+        async def capture(*args, **kwargs):
+            process = await original(*args, **kwargs)
+            processes.append(process)
+            started.set()
+            return process
+        monkeypatch.setattr(asyncio, 'create_subprocess_exec', capture)
+        task = asyncio.create_task(audio_utils._run_command(
+            sys.executable, '-c', 'import time; time.sleep(30)',
+            timeout_seconds=30 if cancel else 0.1))
+        if cancel:
+            await started.wait()
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+        else:
+            with pytest.raises(RuntimeError, match='timed out'):
+                await task
+        assert processes[0].returncode is not None
+    asyncio.run(run())

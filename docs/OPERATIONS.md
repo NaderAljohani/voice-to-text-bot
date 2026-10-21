@@ -25,6 +25,7 @@ the installed CTranslate2 version. Follow the upstream
 
 FFmpeg and ffprobe must be available as system commands even though
 faster-whisper also depends on PyAV. Video files need an audio track.
+Audio subprocesses time out after five minutes and are terminated on cancellation.
 The [Telegram getFile API](https://core.telegram.org/bots/api#getfile) limits
 cloud downloads separately from this bot's duration limit.
 

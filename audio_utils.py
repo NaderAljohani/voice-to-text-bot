@@ -35,13 +35,23 @@ def is_speech_vad_available() -> bool:
     return True
 
 
-async def _run_command(*args: str) -> str:
+async def _run_command(*args: str, timeout_seconds: float = 300) -> str:
     process = await asyncio.create_subprocess_exec(
         *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    stdout, stderr = await process.communicate()
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_seconds)
+    except (TimeoutError, asyncio.CancelledError) as exc:
+        try:
+            process.kill()
+        except ProcessLookupError:
+            pass
+        await process.communicate()
+        if isinstance(exc, asyncio.CancelledError):
+            raise
+        raise RuntimeError(f"Audio command timed out after {timeout_seconds:g} seconds: {args[0]}") from exc
     if process.returncode != 0:
         message = stderr.decode("utf-8", errors="ignore").strip()
         raise RuntimeError(message or f"Command failed: {' '.join(args)}")
