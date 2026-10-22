@@ -4,6 +4,12 @@ A Telegram bot that transcribes voice messages, audio files, and video audio
 on the host machine using faster-whisper. It includes Arabic user messages,
 daily usage quotas, transcript quality checks, and a local monitoring dashboard.
 
+![Local monitoring dashboard and transcript-detail view using synthetic demo records](docs/images/dashboard-demo.gif)
+
+Ten-second walkthrough of the running local dashboard with synthetic users and
+sample transcript records. It demonstrates the monitoring and detail views;
+it does not show a Telegram conversation or an actual transcription run.
+
 Transcription uses a local model. Telegram still transports the submitted media
 and returned text. A Telegram bot token is required; no paid speech API key is
 needed.
